@@ -19,7 +19,7 @@ int main()
         perror("Сервер не может открыть socket для UDP.");
         return 1;
     }
-    bzero((char*)&servAddr, sizeof(servAddr));
+    // bzero((char*)&servAddr, sizeof(servAddr));
     servAddr.sin_family = AF_INET;
     servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
     servAddr.sin_port = 0;
@@ -41,6 +41,10 @@ int main()
 
         if ((msgLength = recvfrom(sockMain, buf, BUFLEN, 0, (struct sockaddr*)&clientAddr, &length)) < 0) {
             perror("Плохой socket клиента.");
+            return 1;
+        }
+        if (sendto(sockMain, buf, BUFLEN, 0, (struct sockaddr*)&clientAddr, length) < 0) {
+            perror("Проблемы с sendto.\n");
             return 1;
         }
         printf("SERVER: IP адрес клиента: %s\n", inet_ntoa(clientAddr.sin_addr));

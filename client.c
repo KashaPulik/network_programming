@@ -11,36 +11,53 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#define BUFLEN 81
+
 int main(int argc, char* argv[])
 {
-    int sock;
-    struct sockaddr_in servAddr, clientAddr;
-    struct hostent *hp, *gethostbyname();
     if (argc < 4) {
-        printf("ВВЕСТИ udpclient имя_хоста порт сообщение\n");
+        printf("ВВЕСТИ client имя_хоста порт число\n");
         return 1;
     }
+
+    int sock, number = atoi(argv[3]);
+    socklen_t length;
+    struct sockaddr_in servAddr, clientAddr;
+    char buf[BUFLEN];
+    // struct hostent* hp;
     if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
         perror("He могу получить socket\n");
         return 1;
     }
-    bzero((char*)&servAddr, sizeof(servAddr));
+    // bzero((char*)&servAddr, sizeof(servAddr));
     servAddr.sin_family = AF_INET;
-    hp = gethostbyname(argv[1]);
-    bcopy(hp->h_addr, &servAddr.sin_addr, hp->h_length);
+    // hp = gethostbyname(argv[1]);
+    // bcopy(hp->h_addr, &servAddr.sin_addr, hp->h_length);
     servAddr.sin_port = htons(atoi(argv[2]));
-    bzero((char*)&clientAddr, sizeof(clientAddr));
+    // bzero((char*)&clientAddr, sizeof(clientAddr));
     clientAddr.sin_family = AF_INET;
-    clientAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    // clientAddr.sin_addr.s_addr = htonl(INADDR_ANY);
     clientAddr.sin_port = 0;
     if (bind(sock, (struct sockaddr*)&clientAddr, sizeof(clientAddr))) {
         perror("Клиент не получил порт.");
         return 1;
     }
     printf("CLIENT: Готов к пересылке.\n ");
-    if (sendto(sock, argv[3], strlen(argv[3]), 0, (struct sockaddr*)&servAddr, sizeof(servAddr)) < 0) {
-        perror("Проблемы с sendto.\n");
-        return 1;
+    for (int i = 0; i < number * number; i++) {
+        length = sizeof(clientAddr);
+        if (sendto(sock, argv[3], strlen(argv[3]), 0, (struct sockaddr*)&servAddr, sizeof(servAddr)) < 0) {
+            perror("Проблемы с sendto.\n");
+            return 1;
+        }
+
+        if ((recvfrom(sock, buf, BUFLEN, 0, (struct sockaddr*)&clientAddr, &length)) < 0) {
+            perror("Плохой socket клиента.");
+            return 1;
+        }
+
+        printf("Ответ от сервера %s\n\n", buf);
+
+        sleep(number);
     }
     printf("CLIENT: Пересылка завершена. Счастливо оставаться.\n");
     close(sock);
