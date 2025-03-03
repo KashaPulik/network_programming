@@ -3,17 +3,18 @@
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <strings.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
 
-#define BUFLEN 81
+#define BUFLEN 1024
 void BuffWork(int sockClient)
 {
     char buf[BUFLEN];
     int msgLength;
-    bzero(buf, BUFLEN);
+    memset(buf, '\0', BUFLEN);
     if ((msgLength = recv(sockClient, buf, BUFLEN, 0)) < 0) {
         perror("Плохое получение дочерним процессом.");
         exit(1);
@@ -28,11 +29,11 @@ int main()
     int sockMain, sockClient;
     socklen_t length;
     struct sockaddr_in servAddr;
-    if ((sockMain = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+    if ((sockMain = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) {
         perror("Сервер не может открыть главный socket.");
         exit(1);
     }
-    bzero((char*)&servAddr, sizeof(servAddr));
+    memset((char*)&servAddr, '\0', sizeof(servAddr));
     servAddr.sin_family = AF_INET;
     servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
     servAddr.sin_port = 0;

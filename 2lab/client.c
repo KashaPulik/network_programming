@@ -18,14 +18,14 @@ int main(int argc, char* argv[])
         printf("ВВЕСТИ tcpclient имя_хоста порт сообщение\n");
         exit(1);
     }
-    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+    if ((sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) {
         perror("He могу получить socket\n");
         exit(1);
     }
-    bzero((char*)&servAddr, sizeof(servAddr));
+    memset((char*)&servAddr, '\0', sizeof(servAddr));
     servAddr.sin_family = AF_INET;
     hp = gethostbyname(argv[1]);
-    bcopy(hp->h_addr_list[0], &servAddr.sin_addr, hp->h_length);
+    memcpy(&servAddr.sin_addr, hp->h_addr_list[0], hp->h_length);
     servAddr.sin_port = htons(atoi(argv[2]));
     if (connect(sock, (struct sockaddr*)&servAddr, sizeof(servAddr)) < 0) {
         perror("Клиент не может соединиться.\n");
