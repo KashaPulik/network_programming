@@ -47,6 +47,7 @@ int main()
             perror("Проблемы с sendto.\n");
             return 1;
         }
+        
         printf("SERVER: IP адрес клиента: %s\n", inet_ntoa(clientAddr.sin_addr));
         printf("SERVER: PORT клиента: %d\n", ntohs(clientAddr.sin_port));
         printf("SERVER: Длина сообщения - %d\n", msgLength);
