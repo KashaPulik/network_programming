@@ -8,12 +8,18 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <signal.h>
 
 #define BUFLEN 1024
 
 typedef struct hostent hostent;
 typedef struct sockaddr_in sockaddr_in;
 typedef struct sockaddr sockaddr;
+
+void handle_sigpipe(int sig)
+{
+
+}
 
 int main(int argc, char* argv[])
 {
@@ -40,7 +46,6 @@ int main(int argc, char* argv[])
     if (connect(client_socket, (sockaddr*)&server_address, sizeof(server_address)) < 0) {
         perror("Error: can't connect to server");
         close(client_socket);
-        printf("Connection refused\n");
         return 1;
     }
 
@@ -48,17 +53,18 @@ int main(int argc, char* argv[])
 
     int messege_number = atoi(argv[3]);
 
+    signal(SIGPIPE, handle_sigpipe);
+
     for (int i = 0; i < messege_number * messege_number; i++) {
         printf("Sending messege \"%s\"\n\n", argv[3]);
         if (send(client_socket, argv[3], strlen(argv[3]), 0) < 0) {
-            perror("Error: can't send messege to server\n");
+            perror("Error: can't send messege to server");
             close(client_socket);
-            printf("Connection refused\n");
             return 1;
         }
         sleep(messege_number);
     }
 
     close(client_socket);
-    printf("Connection refused\n");
+    printf("Connection closed\n");
 }

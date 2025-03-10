@@ -22,7 +22,7 @@ typedef struct sockaddr sockaddr;
 sockaddr_in get_some_address()
 {
     sockaddr_in address;
-    memset((char*)&address, '\0', sizeof(address));
+    memset(&address, 0, sizeof(address));
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = htonl(INADDR_ANY);
     address.sin_port = 0;
@@ -65,7 +65,7 @@ int client_process(int main_socket)
 {
     int client_socket;
     sockaddr_in client_address;
-    socklen_t client_address_len;
+    socklen_t client_address_len = sizeof(client_address);
 
     if ((client_socket = accept(main_socket, (sockaddr*)&client_address, &client_address_len)) < 0) {
         perror("Error: client acception fall");
@@ -76,6 +76,7 @@ int client_process(int main_socket)
 
     if (child == -1) {
         perror("Error: can't create new process");
+        close(main_socket);
         return 1;
     } else if (child == 0) {
         close(main_socket);
