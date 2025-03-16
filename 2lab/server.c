@@ -14,7 +14,7 @@
 #include <unistd.h>
 
 #define BUFLEN 1024
-#define MAX_CLIENTS 10
+#define MAX_CLIENTS 2
 
 typedef struct sockaddr_in sockaddr_in;
 typedef struct sockaddr sockaddr;
@@ -54,10 +54,10 @@ int communication(int client_socket, sockaddr_in client_address)
         return -1;
     } else if (messege_len == 0) {
         printf("Client on port %d disconnected\n\n", ntohs(client_address.sin_port));
-        return 0;
+        return 1;
     } else {
         printf("Recieved messege \"%s\" from client on port %d\n\n", buffer, ntohs(client_address.sin_port));
-        return 1;
+        return 0;
     }
 }
 
@@ -68,7 +68,7 @@ int client_process(int main_socket)
     socklen_t client_address_len = sizeof(client_address);
 
     if ((client_socket = accept(main_socket, (sockaddr*)&client_address, &client_address_len)) < 0) {
-        perror("Error: client acception fall");
+        perror("Error: client acception fail");
         return 1;
     }
 
@@ -77,18 +77,22 @@ int client_process(int main_socket)
     if (child == -1) {
         perror("Error: can't create new process");
         close(main_socket);
+        close(client_socket);
         return 1;
     } else if (child == 0) {
         close(main_socket);
-        for (;;)
+        for (;;) {
             switch (communication(client_socket, client_address)) {
             case -1:
                 close(client_socket);
-                return 1;
-            case 0:
+                exit(1);
+            case 1:
                 close(client_socket);
-                return 0;
+                exit(0);
+            default:
+                break;
             }
+        }
     }
     close(client_socket);
     return 0;
@@ -112,25 +116,27 @@ int main()
 
     sockaddr_in server_address = get_some_address();
 
-    if (my_bind(main_socket, &server_address)) {
+    if (my_bind(main_socket, &server_address) < 0) {
         perror("Error: can't bind socket");
         return 1;
     }
 
-    if (my_getsockname(main_socket, &server_address)) {
+    if (my_getsockname(main_socket, &server_address) < 0) {
         perror("Error: getsockname fall");
         return 1;
     }
 
     printf("Server works on port %d\n\n", ntohs(server_address.sin_port));
-    listen(main_socket, MAX_CLIENTS);
+
+    if (listen(main_socket, MAX_CLIENTS) < 0) {
+        perror("Error: listen fail");
+        return 1;
+    }
 
     signal(SIGCHLD, reaper);
 
     for (;;) {
-        switch (client_process(main_socket)) {
-        case 1:
+        if (client_process(main_socket) == 1)
             return 1;
-        }
     }
 }
