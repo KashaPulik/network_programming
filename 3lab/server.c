@@ -36,7 +36,7 @@ int my_bind(int fd, sockaddr_in* address)
 
 int my_getsockname(int fd, sockaddr_in* address)
 {
-    socklen_t address_len = sizeof(*address);
+    socklen_t address_len = sizeof(address);
     return getsockname(fd, (sockaddr*)address, &address_len);
 }
 
@@ -87,7 +87,7 @@ int client_process(int main_socket)
                 return 1;
             case 0:
                 close(client_socket);
-                return 0;
+                return 2;
             }
     }
     close(client_socket);
@@ -97,7 +97,7 @@ int client_process(int main_socket)
 void reaper(int sig)
 {
     int status;
-    while (waitpid(-1, &status, WNOHANG) > 0)
+    while (wait3(&status, WNOHANG, (struct rusage*)0) >= 0)
         ;
 }
 
@@ -131,6 +131,8 @@ int main()
         switch (client_process(main_socket)) {
         case 1:
             return 1;
+        case 2:
+            return 0;
         }
     }
 }
