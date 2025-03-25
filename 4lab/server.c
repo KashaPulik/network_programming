@@ -122,7 +122,6 @@ int main()
         }
 
         for (fd = 0; fd < nfds; fd++) {
-            printf("%d\n", fd);
             if (fd != main_socket && FD_ISSET(fd, &rfds)) {
                 if (handler(fd) == 0) {
                     close(fd);

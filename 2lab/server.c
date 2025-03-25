@@ -98,13 +98,6 @@ int client_process(int main_socket)
     return 0;
 }
 
-void reaper(int sig)
-{
-    int status;
-    while (waitpid(-1, &status, WNOHANG) > 0)
-        ;
-}
-
 int main()
 {
     int main_socket;
@@ -133,7 +126,7 @@ int main()
         return 1;
     }
 
-    signal(SIGCHLD, reaper);
+    signal(SIGCHLD, SIG_IGN);
 
     for (;;) {
         if (client_process(main_socket) == 1)
